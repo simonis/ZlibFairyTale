@@ -379,7 +379,13 @@ mark.border-no-bottom {
     font-size: 12px;
     color: #eee8d5;
 }
-  </style>
+ul:before{
+    content:attr(data-header);
+    font-size:120%;
+    font-weight:bold;
+    margin-left: -2ex;
+}
+</style>
 
     <!-- Printing and PDF exports -->
     <script>
@@ -468,14 +474,76 @@ mark.border-no-bottom {
         <section data-background="images/background_title.jpg" style="text-align: left;">
           <h1>A fairy tale of zlib/zip <br/> compression in OpenJDK</h1>
           <p>
-            Volker Simonis (he/him)<br/>
+            Volker Simonis (<a href="https://twitter.com/volker_simonis">@volker_simonis</a>)<br/>
             Principal Software Engineer<br/>
             AWS
           </p>
         </section>
 
         <section data-background="images/background_default.jpg">
-          <h2>zlib compression</h2>
+          <h2>About me</h2>
+
+          <ul data-header="Present:" style="width: 60%;">
+            <li>Principal Software Engineer @ Amazon Corretto</li>
+            <li>OpenJDK Member, Committer &amp; Reviewer</li>
+            <li>OpenJDK Build, Hotspot, Porters &amp; Vulnerability Group</li>
+            <li>OpenJDK Governing Board</li>
+            <li>Java Community Process Executive Committee</li>
+          </ul>
+
+          <ul data-header="Past:" style="width: 60%;">
+            <li>SAP JVM and SapMachine @ SAP</li>
+            <li>OpenJDK Build PowerPC/AIX &amp; s390x Project Lead </li>
+            <li>JCP Expert Groups for Java SE 9 to 13</li>
+          </ul>
+        </section>
+
+        <section data-background="images/background_default.jpg">
+          <h2>About zlib/zip</h2>
+        </section>
+
+        <section data-background="images/background_default.jpg">
+          <h2>zlib/zip in Java&#8482;</h2>
+        </section>
+
+        <section data-background="images/background_default.jpg">
+          <h2>Deflate (aka RFC 1951)</h2>
+        </section>
+
+        <section data-background="images/background_default.jpg">
+          <h2>Deflate Performance - 2020 vs. 2022</h2>
+
+          <object data="images/i7-8650U-1900MHz-deflate-silesia-2020-09-16-file-deflate-silesia-horizontal-part2.svg"
+                  type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+
+          <object data="images/i7-8650U-1900MHz-deflate-silesia-2022-10-21-file-deflate-silesia-horizontal-part2.svg"
+                  type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+        </section>
+
+        <section data-background="images/background_default.jpg">
+          <h2>Inflate Performance - 2020 vs. 2022</h2>
+
+          <object data="images/i7-8650U-1900MHz-inflate-silesia-2020-09-16-file-inflate-silesia-horizontal-part2.svg"
+                  type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+
+          <object data="images/i7-8650U-1900MHz-inflate-silesia-2022-10-21-file-inflate-silesia-horizontal-part2.svg"
+                  type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+        </section>
+
+        <section data-background="images/background_default.jpg">
+          <h2>References</h2>
+
+          <ul>
+            <li>Zip Files: History, Explanation and Implementation</li>
+            <li>Gzip format and DEFLATE compression algorithm</li>
+            <li>Understanding zlib</li>
+            <li>RFC 1951: DEFLATE Compressed Data Format Spec. vers. 1.3</li>
+            <li>An explanation of the Deflate algorithm</li>
+            <li>A fast implemenation of Deflate</li>
+            <li>High Performance ZLIB compression on Intel Architecture Processors</li>
+            <li><a href="https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT">
+              ZIP File Format Specification</a></li>
+          </ul>
         </section>
 
         <section data-background="images/background_last.jpg">
