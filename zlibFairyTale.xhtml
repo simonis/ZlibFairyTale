@@ -162,6 +162,11 @@ mark.border-no-bottom {
   border-radius: 10px;
   margin: -3px;
 }
+.reveal .slides section .fragment.highlight-current-border.red.current-fragment {
+  border: 3px solid #F00;
+  border-radius: 10px;
+  margin: -3px;
+}
 .reveal .slides section .fragment.highlight-current-border.border-no-top.current-fragment {
   border-style: solid;
   border-color: transparent #1B91FF #1B91FF #1B91FF;
@@ -379,7 +384,8 @@ mark.border-no-bottom {
     font-size: 12px;
     color: #eee8d5;
 }
-ul:before{
+
+ul.before::before {
     content:attr(data-header);
     font-size:120%;
     font-weight:bold;
@@ -472,6 +478,7 @@ ul:before{
       <div class="slides">
 
         <section data-background="images/background_title.jpg" style="text-align: left;">
+          <p style="margin-bottom : 6em;"></p>
           <h1>A fairy tale of zlib/zip <br/> compression in OpenJDK</h1>
           <p>
             Volker Simonis (<a href="https://twitter.com/volker_simonis">@volker_simonis</a>)<br/>
@@ -481,9 +488,9 @@ ul:before{
         </section>
 
         <section data-background="images/background_default.jpg">
-          <h2>About me</h2>
+          <h1>About me</h1>
 
-          <ul data-header="Present:" style="width: 60%;">
+          <ul class="before" data-header="Present:" style="width: 60%;">
             <li>Principal Software Engineer @ Amazon Corretto</li>
             <li>OpenJDK Member, Committer &amp; Reviewer</li>
             <li>OpenJDK Build, Hotspot, Porters &amp; Vulnerability Group</li>
@@ -491,33 +498,182 @@ ul:before{
             <li>Java Community Process Executive Committee</li>
           </ul>
 
-          <ul data-header="Past:" style="width: 60%;">
+          <ul class="before" data-header="Past:" style="width: 60%;">
             <li>SAP JVM and SapMachine @ SAP</li>
             <li>OpenJDK Build PowerPC/AIX &amp; s390x Project Lead </li>
             <li>JCP Expert Groups for Java SE 9 to 13</li>
+            <li class="fragment"><a href="https://events.eclipse.org/2011/europe/">EclipseCon 2011</a>:
+              <a href="http://www.progdoc.de/papers/EclipseCon2011/EclipseCon2011.html">How to Contribute to the OpenJDK</a>
+            </li>
           </ul>
         </section>
 
         <section data-background="images/background_default.jpg">
-          <h2>About zlib/zip</h2>
+          <h1>About zlib/zip/Deflate</h1>
+
+          <ul>
+            <li>Deflate: compression algorithm (<a href="https://www.rfc-editor.org/rfc/rfc1951">RFC 1951</a>)
+              <ul>
+                <li>Uses LZ77 (Lempel-Zip) and Huffman Coding</li>
+              </ul>
+            </li>
+            <li class="fragment">zlib (<a href="https://www.zlib.net/">https://www.zlib.net</a>):
+              <ul>
+                <li>Library by Jean-loup Gailly &amp; Mark Adler (1995)</li>
+                <li>Compressed data format (<a href="https://www.rfc-editor.org/rfc/rfc1950">RFC 1950</a>)
+                  <ul>
+                    <li>Deflate stream with Adler32 checksum)</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li class="fragment">Gzip: compressed file format, single file (<a href="https://www.rfc-editor.org/rfc/rfc1952">RFC 1952</a>)
+              <ul>
+                <li>Uses Deflate compression and CRC32 checksum</li>
+              </ul>
+            </li>
+            <li class="fragment">Zip: compressed file format, multiple files
+              <ul>
+                <li>Supports additionl compression algorithms</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+
+          <section data-background="images/background_default.jpg">
+            <h1>zlib/zip in Java&#8482;</h1>
+
+            <ul class="before" data-header="JDK 1.0 (1996):" style="width: 60%;">
+              <li>Supported class loading from <em>uncompressed</em> zip files</li>
+            </ul>
+            <ul class="before fragment" data-header="JDK 1.1 (1997):" style="width: 60%;">
+              <li>Support for compressed zip files</li>
+              <li>Introduced the <code>java.util.zip</code> package
+                <ul>
+                  <li>Implemented with JNI wrapper on top of zlib 1.0.4</li>
+                </ul>
+              </li>
+              <li>Introduced the JAR file format</li>
+            </ul>
+            <ul class="before fragment" data-header="JDK 1.2 (1998):" style="width: 60%;">
+              <li>Added the <code>java.util.jar</code> package</li>
+            </ul>
+            <ul class="before fragment" data-header="JDK 7 (2011):" style="width: 60%;">
+              <li>Added <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/io/fsp/zipfilesystemprovider.html">Zip File System Provider</a>
+                (<a href="https://bugs.openjdk.org/browse/JDK-6990846">JDK-6990846</a>)</li>
+            </ul>
+          </section>
+
+          <section data-background="images/background_default.jpg">
+            <h1>zlib/zip in Java&#8482;</h1>
+
+            <div style="display: inline-block;">
+            <p style="padding: 0 15px; text-align: left;">Changelog from a <a href="https://www.oracle.com/java/technologies/oracle-java-archive-downloads.html">historic JDK version</a>:</p>
+
+            <pre class="big noshadow" data-trim="true">
+              <code style="background: #93a1a1; color: #000;" class="text" data-trim="true" data-noescape="true">
+Changes from <mark class="border">JDK 1.1beta3 to JDK 1.1_Final</mark>
+...
+JAR CHANGE - Can now handle compressed JAR files in the CLASSPATH
+
+java.util.zip.ZipFile was enhanced so that it can now handle
+compressed ZIP/JAR file entries. No changes to the API were made.
+With this change, compressed JAR/ZIP files can now be handled
+by javac.
+
+Additionally, the runtime has also changed so that it can now
+handle compressed ZIP/JAR files that are specified in the CLASSPATH.
+              </code>
+            </pre>
+            </div>
+          </section>
+
         </section>
 
         <section data-background="images/background_default.jpg">
-          <h2>zlib/zip in Java&#8482;</h2>
+          <h1>Deflate / LZ77</h1>
+
+          <ul style="list-style-type: none;">
+            <li style="margin-bottom: 1ex;">Dictionary based, sliding window (32k) compression</li>
+            <li class="fragment" data-fragment-index="1">Example 1:<br/>
+              <pre class="big noshadow" data-trim="true">
+                <code class="cpp" data-trim="true" data-noescape="true">
+<span class="fragment" data-fragment-index="1"> input: <span class="fragment highlight-current-border" data-fragment-index="5">bla</span>bla!                              
+        <span class="fragment current-visible" data-fragment-index="2">^</span><span class="fragment current-visible" data-fragment-index="3">^</span><span class="fragment current-visible" data-fragment-index="4">^</span><span class="fragment current-visible" data-fragment-index="5">^</span>  <span class="fragment current-visible" data-fragment-index="6">^</span>
+<span class="fragment" data-fragment-index="1">output: </span><span class="fragment" data-fragment-index="2">b</span><span class="fragment" data-fragment-index="3">l</span><span class="fragment" data-fragment-index="4">a</span><span class="fragment" data-fragment-index="5">[3,3]</span><span class="fragment" data-fragment-index="6">!</span></span>
+                </code>
+              </pre>
+            </li>
+            <li class="fragment" data-fragment-index="7">Example 2 (only match patterns >= 3):<br/>
+              <pre class="big noshadow" data-trim="true">
+                <code class="cpp" data-trim="true" data-noescape="true">
+ input: <span class="fragment highlight-current-border" data-fragment-index="14">a<span class="fragment highlight-current-border" data-fragment-index="11">bc</span></span>bcdabcda                          
+        <span class="fragment current-visible" data-fragment-index="8">^</span><span class="fragment current-visible" data-fragment-index="9">^</span><span class="fragment current-visible" data-fragment-index="10">^</span><span class="fragment current-visible" data-fragment-index="11">^</span><span class="fragment current-visible" data-fragment-index="12">^</span><span class="fragment current-visible" data-fragment-index="13">^</span><span class="fragment current-visible" data-fragment-index="14">^</span><span class="fragment current-visible" data-fragment-index="15">  ^</span><span class="fragment current-visible" data-fragment-index="16">^</span>
+output: <span class="fragment" data-fragment-index="8">a</span><span class="fragment" data-fragment-index="9">b</span><span class="fragment" data-fragment-index="10">c</span><span class="fragment" data-fragment-index="11">b</span><span class="fragment" data-fragment-index="12">c</span><span class="fragment" data-fragment-index="13">d</span><span class="fragment" data-fragment-index="14">[6,3]</span><span class="fragment" data-fragment-index="15">d</span><span class="fragment" data-fragment-index="16">a</span>
+                </code>
+              </pre>
+            </li>
+            <li class="fragment" data-fragment-index="17">Example 3 (ambiguous matches):<br/>
+              <pre class="big noshadow" data-trim="true">
+                <code class="cpp" data-trim="true" data-noescape="true">
+ input: <span class="fragment highlight-current-border" data-fragment-index="24">a<span class="fragment highlight-current-border" data-fragment-index="21">bc</span></span>bcda<span class="fragment highlight-current-border red" data-fragment-index="24"><span class="fragment highlight-current-border" data-fragment-index="25">bcda</span></span>                          
+        <span class="fragment current-visible" data-fragment-index="18">^</span><span class="fragment current-visible" data-fragment-index="19">^</span><span class="fragment current-visible" data-fragment-index="20">^</span><span class="fragment current-visible" data-fragment-index="21">^</span><span class="fragment current-visible" data-fragment-index="22">^</span><span class="fragment current-visible" data-fragment-index="23">^</span><span class="fragment current-visible" data-fragment-index="24">^</span><span class="fragment current-visible" data-fragment-index="25">^</span>
+output: <span class="fragment" data-fragment-index="18">a</span><span class="fragment" data-fragment-index="19">b</span><span class="fragment" data-fragment-index="20">c</span><span class="fragment" data-fragment-index="21">b</span><span class="fragment" data-fragment-index="22">c</span><span class="fragment" data-fragment-index="23">d</span><span class="fragment" data-fragment-index="24">a</span><span class="fragment" data-fragment-index="25">[4,4]</span>
+                </code>
+              </pre>
+            </li>
+          </ul>
+<!--
+<![CDATA[
+
+ input: blabla!
+        ^^^^  ^
+output: bla[3,3]!
+
+ input: abcbcdabcda
+        ^^^^^^^  ^
+output: abcbcd[6,3]da
+
+ input: abcbcdabcda
+        ^^^^^^^^
+output: abcbcda[4,4]
+
+]]>
+-->
         </section>
 
         <section data-background="images/background_default.jpg">
-          <h2>Deflate (aka RFC 1951)</h2>
+          <h1>Deflate / Huffmann Coding</h1>
         </section>
 
-        <section data-background="images/background_default.jpg">
-          <h2>Deflate Performance - 2020 vs. 2022</h2>
+        <section>
 
-          <object data="images/i7-8650U-1900MHz-deflate-silesia-2020-09-16-file-deflate-silesia-horizontal-part2.svg"
-                  type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+          <section data-background="images/background_default.jpg">
+            <h2>Deflate Performance - 2020 vs. 2022</h2>
 
-          <object data="images/i7-8650U-1900MHz-deflate-silesia-2022-10-21-file-deflate-silesia-horizontal-part2.svg"
-                  type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+            <object data="images/i7-8650U-1900MHz-deflate-silesia-2020-09-16-file-deflate-silesia-horizontal-part2.svg"
+                    type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+
+            <object data="images/i7-8650U-1900MHz-deflate-silesia-2022-10-21-file-deflate-silesia-horizontal-part2.svg"
+                    type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+          </section>
+
+          <section data-background="images/background_default.jpg">
+            <h2>Deflate Performance - Compression vs. Throughput (mozilla)</h2>
+
+            <object data="images/i7-8650U-1900MHz-deflate-silesia-2022-10-21-ratio-silesia-mozilla.svg"
+                    type="image/svg+xml" style="height: 90%;">&nbsp;</object>
+          </section>
+
+          <section data-background="images/background_default.jpg">
+            <h2>Deflate Performance - Compression vs. Throughput (xml)</h2>
+
+            <object data="images/i7-8650U-1900MHz-deflate-silesia-2022-10-21-ratio-silesia-xml.svg"
+                    type="image/svg+xml" style="height: 90%;">&nbsp;</object>
+          </section>
+
         </section>
 
         <section data-background="images/background_default.jpg">
@@ -531,25 +687,28 @@ ul:before{
         </section>
 
         <section data-background="images/background_default.jpg">
-          <h2>References</h2>
+          <h1>References</h1>
 
           <ul>
-            <li>Zip Files: History, Explanation and Implementation</li>
-            <li>Gzip format and DEFLATE compression algorithm</li>
-            <li>Understanding zlib</li>
-            <li>RFC 1951: DEFLATE Compressed Data Format Spec. vers. 1.3</li>
-            <li>An explanation of the Deflate algorithm</li>
-            <li>A fast implemenation of Deflate</li>
-            <li>High Performance ZLIB compression on Intel Architecture Processors</li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc1950">RFC 1950: ZLIB Compressed Data Format Specification version 3.3</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc1951">RFC 1951: DEFLATE Compressed Data Format Spec. vers. 1.3</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc1952">RFC 1952: GZIP file format fpec. vers. 4.3</a></li>
+            <li><a href="https://zlib.net/feldspar.html">An explanation of the Deflate algorithm</a></li>
+            <li><a href="https://www.hanshq.net/zip.html">Zip Files: History, Explanation and Implementation</a></li>
+            <li><a href="https://www.sobyte.net/post/2022-01/gzip-and-deflate/">Gzip format and DEFLATE compression algorithm</a></li>
+            <li><a href="https://www.euccas.me/zlib/">Understanding zlib</a></li>
+            <li><a href="https://ieeexplore.ieee.org/document/6824430">A fast implemenation of Deflate</a></li>
+            <li><a href="https://www.intel.com/content/dam/www/public/us/en/documents/white-papers/zlib-compression-whitepaper-copy.pdf">
+                High Performance ZLIB compression on Intel Architecture Processors</a></li>
             <li><a href="https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT">
-              ZIP File Format Specification</a></li>
+                ZIP File Format Specification</a></li>
           </ul>
         </section>
 
         <section data-background="images/background_last.jpg">
-          <h3 style="text-transform: none;">
+          <h2 style="text-transform: none;">
             <a href="https://simonis.github.io/ZlibFairyTale" style="color: inherit;">https://simonis.github.io/ZlibFairyTale</a>
-          </h3>
+          </h2>
         </section>
 
       </div>
@@ -568,10 +727,10 @@ ul:before{
         //height: 768,
         //width: 1280,
         //height: 720,
-        width: 1366,
-        height: 768,
-        //width: 1920,
-        //height: 1080,
+        //width: 1366,
+        //height: 768,
+        width: 1920,
+        height: 1080,
         margin: 0.1,
         controls: true,
         progress: true,
