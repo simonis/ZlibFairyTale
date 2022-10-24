@@ -493,6 +493,12 @@ pre.after.small::after {
         </section>
 
         <section data-background="images/background_default.jpg">
+          <h2 style="text-transform: none;">
+            <a href="https://simonis.github.io/EclipseCon2022/" style="color: inherit;">https://simonis.github.io/EclipseCon2022/</a>
+          </h2>
+        </section>
+
+        <section data-background="images/background_default.jpg">
           <h1>About me</h1>
 
           <ul class="before" data-header="Present:" style="width: 60%;">
@@ -730,7 +736,7 @@ d:10 ---+
 
             <ul>
               <li>LZZ requires a tag (bit) to distinguish literals from distance/length</li>
-              <li>Deflate conceptuall requiers three alphabets:
+              <li>Deflate conceptually requires three alphabets:
                 <ul>
                   <li>Byte values &isin; 0..255</li>
                   <li>[length, distance] pairs (with length &isin; 3..258 and distance &isin; 1..32768)</li>
@@ -748,7 +754,7 @@ d:10 ---+
                   </code>
                 </pre>
               </li>
-              <li class="fragment" data-fragment-index="2">..and uses another 32 charcter alphabet for distances:
+              <li class="fragment" data-fragment-index="2">..and uses another 32 character alphabet for distances:
                 <ul>
                   <li>5 bits (0..32) plus 0..13 extra bits for distances &isin; 1..32768</li>
                 </ul>
@@ -836,7 +842,7 @@ libz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007ffff7785000)
                   back to static (<a href="https://bugs.openjdk.org/browse/JDK-8286623">JDK-8286623</a>)
                 </li>
                 <li class="fragment">Security considerations (e.g. <a href="https://nvd.nist.gov/vuln/detail/CVE-2018-25032">CVE-2018-25032</a>)</li>
-                <li class="fragment">In the end every OpenJDK vender can decide independently</li>
+                <li class="fragment">In the end every OpenJDK vendor can decide independently</li>
               </ul>
             </li>
           </ul>
@@ -847,7 +853,7 @@ libz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007ffff7785000)
 
           <section data-background="images/background_default.jpg">
 
-            <h2>Using alternative zlib implementions with OpenJDK</h2>
+            <h2>Using alternative zlib implementations with OpenJDK</h2>
 
             <ul>
               <li>Check if your OpenJDK version dynamically links zlib?</li>
@@ -901,7 +907,8 @@ $ cat /proc/`pidof java`/maps | grep "libz.so" | awk '{print $6;}' | uniq</span>
               </li>
               <li class="fragment" data-fragment-index="3"><code>Inflater::read(..)</code> can scribble <code>b[off+k]</code>
                 through <code>b[off+len-1]</code>!</li>
-              <li class="fragment" data-fragment-index="4">The original zlib never did, but optimized version <span class="bold">do so</span>!</li>
+              <li class="fragment" data-fragment-index="4" style="margin-top: 2ex;">
+                The original zlib never did, but optimized version <span class="bold">do so</span>!</li>
             </ul>
 
           </section>
@@ -1035,7 +1042,7 @@ out buffer: 123456789abcdefg123456789............
                   </div>
                 </div>
               </li>
-              <li class="fragment" data-fragment-index="10">zlib-chromium uses vector (128bit) load/store instructions if possible:<br/>
+              <li class="fragment" data-fragment-index="10">zlib-chromium uses vector (16 byte) load/store instructions if possible:<br/>
                 <div width="100%" style="position: relative; margin: 0 0 0 0px;">
                   <div class="" style="position: static;">
                     <pre class="big noshadow" data-trim="true">
@@ -1091,7 +1098,7 @@ out buffer: 123456789abcdefg123456789abcdefg<span class="fragment highlight-curr
               <li>How can this ever affect real user code?
                 <ul>
                   <li>The <code>::read(..)</code> buffer can always be overwritten completely.<br/>
-                    <span class="fragment" data-fragment-index="1">So nobody should <em>seriously</em> store important data there, right?</span>
+                    <span class="fragment" data-fragment-index="1">So nobody will <em>seriously</em> store important data there, right?</span>
                   </li>
                 </ul>
               </li>
@@ -1106,7 +1113,8 @@ while ((bytesRead = <span class="fragment highlight-current-border" data-fragmen
 if (<span class="fragment highlight-current-border" data-fragment-index="3">readCount == 1</span>) {
     return <span class="fragment highlight-current-border red" data-fragment-index="4">data</span>;         //  &lt;---- first bytes might be overwritten
 }
-return outputStream.toByteArray();                  </code>
+return outputStream.toByteArray();
+                  </code>
                 </pre>
               </li>
               <li class="fragment" data-fragment-index="3">Even for "readCount == 1", "inflaterInputStream.read(..)" gets called twice!<br/>
@@ -1151,14 +1159,112 @@ return outputStream.toByteArray();                  </code>
 
           <section data-background="images/background_default.jpg">
 
-            <h1>The zip File Format</h1>
+            <h2>The zip File Format</h2>
+
+            <div style="display: inline-block;">
+              <pre class="big noshadow" data-trim="true">
+                <code style="background: #93a1a1; color: #000;" class="text" data-trim="true" data-noescape="true">
+                                            Central
+ FileEntry1  FileEntry2       FileEntryN   Directory
+/          \/          \     /          \/           \
+|<span class="fragment highlight-current-border" data-fragment-index="1">LH</span>|<span class="fragment highlight-current-border" data-fragment-index="4">data</span>|<span class="fragment highlight-current-border" data-fragment-index="3">DD</span>||<span class="fragment highlight-current-border" data-fragment-index="1">LH</span>|<span class="fragment highlight-current-border" data-fragment-index="4">data</span>|<span class="fragment highlight-current-border" data-fragment-index="3">DD</span>|.....|<span class="fragment highlight-current-border" data-fragment-index="1">LH</span>|<span class="fragment highlight-current-border" data-fragment-index="4">data</span>|<span class="fragment highlight-current-border" data-fragment-index="3">DD</span>||<span class="fragment highlight-current-border" data-fragment-index="2">CH</span>|<span class="fragment highlight-current-border" data-fragment-index="2">CH</span>|..|<span class="fragment highlight-current-border" data-fragment-index="2">CH</span>|<span class="fragment highlight-current-border" data-fragment-index="5">EOCD</span>|
+^           ^                ^            |  |        |
+|           |                |            |  |        |
+|           |                +------------|--|--------+
+|           |                             |  |
+|           +-----------------------------|--+
+|                                         |
++-----------------------------------------+
+
+<span class="fragment highlight-current-border" data-fragment-index="1">LH (Local File Header)        : name, size (comp &amp; uncomp), CRC32,.. </span>
+<span class="fragment highlight-current-border" data-fragment-index="2">CH (Central File Header)      : offset, name, size (comp &amp; uncomp),..</span>
+<span class="fragment highlight-current-border" data-fragment-index="3">DD (Data Descriptor, optional): size (comp &amp; uncomp), CRC32</span>
+<span class="fragment highlight-current-border" data-fragment-index="4">data                          : (compressed) data stream</span>
+<span class="fragment highlight-current-border" data-fragment-index="5">EOCD (End Of Centr. Directory): signature,..</span>
+                </code>
+              </pre>
+<div style="display: none;">
+<![CDATA[
+                                            Central
+ FileEntry1  FileEntry2       FileEntryN   Directory
+/          \/          \     /          \/           \
+|LH|data|DD||LH|data|DD|.....|LH|data|DD||CH|CH|..|CH|EOCD|
+^           ^                ^            |  |        |
+|           |                |            |  |        |
+|           |                +------------|--|--------+
+|           |                             |  |
+|           +-----------------------------|--+
+|                                         |
++-----------------------------------------+
+
+LH (Local File Header)          : name, size (comp & uncomp), CRC32,..
+CH (Central File Header)        : name, size (comp & uncomp), CRC32,..
+DD (Data Dascriptor, optional)  : size (comp & uncomp), CRC32
+data                            : (compressed) data stream
+EOCD (End Of Centr. Dir. record): signature,..
+]]>
+</div>
+            </div>
 
           </section>
 
           <section data-background="images/background_default.jpg">
 
-            <h1>Copying zip Files in Java</h1>
+            <h2>Copying zip Files in Java</h2>
 
+            <ul>
+              <li class="fragment"><code style="color: #78b9e6;">ZipEntry</code> corresponds to Local/Central File Header
+                <ul>
+                  <li><code style="color: #78b9e6;">ZipEntry</code> returned by <code style="color: #78b9e6;">ZipInputStream</code> correspond to LFH</li>
+                  <li><code style="color: #78b9e6;">ZipEntry</code> returned by <code style="color: #78b9e6;">ZipFile</code> correspond to CFH</li>
+                </ul>
+              </li>
+              <li class="fragment">There's no way to read/write the compressed data stream from a <code style="color: #78b9e6;">ZipEntry</code></li>
+              <li class="fragment">To copy a <code style="color: #78b9e6;">ZipEntry</code> we have to inflate and deflate it again<br/>
+                <pre class="big noshadow" data-trim="true">
+                  <code class="java" data-trim="true" data-noescape="true">
+ zis = new ZipInputStream(new FileInputStream("src.zip"));
+ zos = new ZipOutputStream(new FileOutputStream("dst.zip"));
+ while((entry = zis.getNextEntry()) != null) {
+     zos.putNextEntry(entry);
+     zis.transferTo(zos); // uses j.u.z.{Inflater/Deflater}
+ }
+                  </code>
+                </pre>
+              </li>
+              <li class="fragment">If <span style="color: #e6db74;">"src.zip"</span> was compressed with a different zlib (or compression level):<br/>
+                we get a: <code style="color: #78b9e6;">ZipException: "invalid entry compressed size (..)"</code>
+              </li>
+            </ul>
+          </section>
+
+          <section data-background="images/background_default.jpg">
+
+            <h2>Fixing the "<em>invalid entry compressed size</em>" issue</h2>
+
+            <ul>
+              <li><a href ="https://bugs.openjdk.org/browse/JDK-8253952">JDK-8253952: Refine ZipOutputStream.putNextEntry()
+                  to recalculate ZipEntry's compressed size</a></li>
+              <li>Fixed in JDK 16</li>
+              <li class="fragment">Ignore <code style="color: #78b9e6;">ZipEntry</code>'s compressed size attribute except when explicitly set:
+                <ul>
+                  <li>Required changes to <code style="color: #78b9e6;">ZipOutputStream.putNextEntry()</code>'s API spec:<br/>
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="patch" data-trim="true" data-noescape="true">
+ ...
++     * ............................ When writing a compressed (DEFLATED)
++     * entry, and the compressed size has not been explicitly set with the
++     * {@link ZipEntry#setCompressedSize(long)} method, then the compressed
++     * size will be set to the actual compressed size after deflation.
+ ...
+ public void putNextEntry(ZipEntry ze) throws IOException {
+                      </code>
+                    </pre>
+                  </li>
+                </ul>
+              </li>
+              <li class="fragment">This will write an empty LFH an put the compressed size into the Data Descriptor</li>
+            </ul>
           </section>
 
         </section>
@@ -1169,12 +1275,12 @@ return outputStream.toByteArray();                  </code>
           <ul>
             <li><a href="https://www.rfc-editor.org/rfc/rfc1950">RFC 1950: ZLIB Compressed Data Format Specification version 3.3</a></li>
             <li><a href="https://www.rfc-editor.org/rfc/rfc1951">RFC 1951: DEFLATE Compressed Data Format Spec. vers. 1.3</a></li>
-            <li><a href="https://www.rfc-editor.org/rfc/rfc1952">RFC 1952: GZIP file format fpec. vers. 4.3</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc1952">RFC 1952: GZIP file format spec. vers. 4.3</a></li>
             <li><a href="https://zlib.net/feldspar.html">An explanation of the Deflate algorithm</a></li>
             <li><a href="https://www.hanshq.net/zip.html">Zip Files: History, Explanation and Implementation</a></li>
             <li><a href="https://www.sobyte.net/post/2022-01/gzip-and-deflate/">Gzip format and DEFLATE compression algorithm</a></li>
             <li><a href="https://www.euccas.me/zlib/">Understanding zlib</a></li>
-            <li><a href="https://ieeexplore.ieee.org/document/6824430">A fast implemenation of Deflate</a></li>
+            <li><a href="https://ieeexplore.ieee.org/document/6824430">A fast implementation of Deflate</a></li>
             <li><a href="https://www.intel.com/content/dam/www/public/us/en/documents/white-papers/zlib-compression-whitepaper-copy.pdf">
                 High Performance ZLIB compression on Intel Architecture Processors</a></li>
             <li><a href="https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT">
@@ -1186,7 +1292,7 @@ return outputStream.toByteArray();                  </code>
 
         <section data-background="images/background_last.jpg">
           <h2 style="text-transform: none;">
-            <a href="https://simonis.github.io/ZlibFairyTale" style="color: inherit;">https://simonis.github.io/ZlibFairyTale</a>
+            <a href="https://simonis.github.io/EclipseCon2022/" style="color: inherit;">https://simonis.github.io/EclipseCon2022/</a>
           </h2>
         </section>
 
@@ -1401,3 +1507,26 @@ hljs.initHighlightingOnLoad(); } },
 
   </body>
 </html>
+
+<!--  LocalWords:  zlib OpenJDK scrollable px pre hljs noshadow fff
+ -->
+<!--  LocalWords:  elemnts hirarchy monospace arial helvetica ffffff
+ -->
+<!--  LocalWords:  td functionCall darkblue javaCall darkgreen ffa cb
+ -->
+<!--  LocalWords:  rowspan fefefe rgba webkit animatetop keyframes li
+ -->
+<!--  LocalWords:  eee attr Roboto eval defun setq inputStr substring
+ -->
+<!--  LocalWords:  resultStr concat kbd ia vhs JNI JDK Changelog CRC
+ -->
+<!--  LocalWords:  intrinsification Redestad lookups LZ abaca ecb LZZ
+ -->
+<!--  LocalWords:  aecb daecb mozilla xml aarch MacOSX CVE MacOS ASM
+ -->
+<!--  LocalWords:  readCount InflaterInputStream cloudflare LFH CFH
+ -->
+<!--  LocalWords:  src ZipOutputStream putNextEntry ZipEntry's vers
+ -->
+<!--  LocalWords:  GZIP Gzip infgen
+ -->
