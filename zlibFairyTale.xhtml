@@ -575,10 +575,10 @@ pre.after.small::after {
             <h1>zlib/zip in Java&#8482;</h1>
 
             <div style="display: inline-block;">
-            <p style="padding: 0 15px; text-align: left;">Changelog from a <a href="https://www.oracle.com/java/technologies/oracle-java-archive-downloads.html">historic JDK version</a>:</p>
+              <p style="padding: 0 15px; text-align: left;">Changelog from a <a href="https://www.oracle.com/java/technologies/oracle-java-archive-downloads.html">historic JDK version</a>:</p>
 
-            <pre class="big noshadow" data-trim="true">
-              <code style="background: #93a1a1; color: #000;" class="text" data-trim="true" data-noescape="true">
+              <pre class="big noshadow" data-trim="true">
+                <code style="background: #93a1a1; color: #000;" class="text" data-trim="true" data-noescape="true">
 Changes from <mark class="border">JDK 1.1beta3 to JDK 1.1_Final</mark>
 ...
 JAR CHANGE - <mark class="border">Can now handle compressed JAR files</mark> in the CLASSPATH
@@ -590,8 +590,8 @@ by javac.
 
 Additionally, the runtime has also changed so that it can now
 handle compressed ZIP/JAR files that are specified in the CLASSPATH.
-              </code>
-            </pre>
+                </code>
+              </pre>
             </div>
 
           </section>
@@ -879,6 +879,285 @@ $ cat /proc/`pidof java`/maps | grep "libz.so" | awk '{print $6;}' | uniq</span>
                 </pre>
               </li>
             </ul>
+
+          </section>
+
+          <section data-background="images/background_default.jpg">
+
+            <h2><code>InflaterInputStream::read(..)</code></h2>
+
+            <ul>
+              <li class="fragment" data-fragment-index="1"><code>InflaterInputStream</code> is derived from <code>InputStream</code></li>
+              <li class="fragment" data-fragment-index="1"><code>InputStream::read(byte[] b, int off, int len)</code> API specification:<br/>
+                <blockquote style="display: inline-block; background: #93a1a1; color: #000;">
+                  .. If <code>k</code> bytes have been read, then these bytes will be stored in elements<br/>
+                  <code>b[off]</code> through <code>b[off+k-1]</code>, leaving elements
+                  <code>b[off+k]</code> through<br/> <code>b[off+len-1]</code> <span class="bold">unaffected</span>.
+                </blockquote>
+              </li>
+              <li class="fragment" data-fragment-index="3"><span class="bold">But</span>,
+                <code>InflaterInputStream::read(byte[] b, int off, int len)</code><br/>
+                calls <code>Inflater::read(b, off, len)</code> which doesn't have this restriction!
+              </li>
+              <li class="fragment" data-fragment-index="3"><code>Inflater::read(..)</code> can scribble <code>b[off+k]</code>
+                through <code>b[off+len-1]</code>!</li>
+              <li class="fragment" data-fragment-index="4">The original zlib never did, but optimized version <span class="bold">do so</span>!</li>
+            </ul>
+
+          </section>
+
+          <section data-background="images/background_default.jpg">
+
+            <h2><code>Inflate Optimizations</code></h2>
+
+            <ul style="list-style-type: none;">
+              <li>The original zlib copies byte-wise:<br/>
+                <div width="100%" style="position: relative; margin: 0 0 0 0px;">
+                  <div class="" style="position: static;">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+               ^
+out buffer: <mark class="border">123456789</mark>abcdefg.....................
+                            ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="1" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+               ^
+out buffer: 123456789abcdefg1...................
+             ^               ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="2" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+               ^
+out buffer: 123456789abcdefg12...................
+              ^               ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="3" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+               ^
+out buffer: 123456789abcdefg123..................
+               ^               ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="4" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+               ^
+out buffer: 123456789abcdefg1234.................
+                ^               ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="5" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+               ^
+out buffer: 123456789abcdefg12345................
+                 ^               ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="6" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+               ^
+out buffer: 123456789abcdefg123456...............
+                  ^               ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="7" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+               ^
+out buffer: 123456789abcdefg1234567..............
+                   ^               ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="8" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+               ^
+out buffer: 123456789abcdefg12345678.............
+                    ^               ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="9" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+                     ^
+out buffer: 123456789abcdefg123456789............
+                                     ^
+                      </code>
+                    </pre>
+                  </div>
+                </div>
+              </li>
+              <li class="fragment" data-fragment-index="10">zlib-chromium uses vector (128bit) load/store instructions if possible:<br/>
+                <div width="100%" style="position: relative; margin: 0 0 0 0px;">
+                  <div class="" style="position: static;">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+               ^
+out buffer: <mark class="border">123456789</mark>abcdefg.....................
+                            ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="11" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+                     ^
+out buffer: 123456789abcdefg123456789<span class="fragment highlight-current-border red" data-fragment-index="11">abcdefg</span>.....
+                                     ^
+                      </code>
+                    </pre>
+                  </div>
+                  <div class="fragment" data-fragment-index="12" style="position: absolute; left: 0; top: 0; width: 100%">
+                    <pre class="big noshadow" data-trim="true">
+                      <code class="terminal" data-trim="true" data-noescape="true">
+  original: 123456789abcdefg123456789
+
+  deflated: ...[16,9]
+                     ^
+out buffer: 123456789abcdefg123456789abcdefg<span class="fragment highlight-current-border red" data-fragment-index="12">XXX</span>..
+                                     ^
+                      </code>
+                    </pre>
+                  </div>
+                </div>
+              </li>
+              <li class="fragment" data-fragment-index="12">zlib-chromium even
+                <a href="https://chromium.googlesource.com/chromium/src/third_party/zlib/+/015fb32fd2082e802e4e911129628e201ae7def1%5E%21/#F3">
+                  write some extra padding</a> to warn users!!!
+              </li>
+            </ul>
+
+          </section>
+
+          <section data-background="images/background_default.jpg">
+
+            <h2>Inflate Optimization Issues</h2>
+
+            <ul>
+              <li>How can this ever affect real user code?
+                <ul>
+                  <li>The <code>::read(..)</code> buffer can always be overwritten completely.<br/>
+                    <span class="fragment" data-fragment-index="1">So nobody should <em>seriously</em> store important data there, right?</span>
+                  </li>
+                </ul>
+              </li>
+              <li class="fragment" data-fragment-index="2">Enters the scene: clever code from <a href="https://gitlab.ow2.org/asm/asm/-/blob/cfda364ce57e39412b6cc89699b1003c6da6ec41/asm/src/main/java/org/objectweb/asm/ClassReader.java#L308">ASM</a>:<br/>
+                <pre class="big noshadow" data-trim="true">
+                  <code class="java" data-trim="true" data-noescape="true">
+int readcount = 0;
+while ((bytesRead = <span class="fragment highlight-current-border" data-fragment-index="3">inflaterInputStream.read(<span class="fragment highlight-current-border red" data-fragment-index="4">data</span>, 0, bufferSize)</span>) != -1) {
+    outputStream.write(data, 0, bytesRead);
+    readCount++;
+}
+if (<span class="fragment highlight-current-border" data-fragment-index="3">readCount == 1</span>) {
+    return <span class="fragment highlight-current-border red" data-fragment-index="4">data</span>;         //  &lt;---- first bytes might be overwritten
+}
+return outputStream.toByteArray();                  </code>
+                </pre>
+              </li>
+              <li class="fragment" data-fragment-index="3">Even for "readCount == 1", "inflaterInputStream.read(..)" gets called twice!<br/>
+                <span  class="fragment" data-fragment-index="4">The second call overwrites the first bytes in "data[]" because of padding bytes.</span>
+              </li>
+            </ul>
+
+          </section>
+
+
+          <section data-background="images/background_default.jpg">
+
+            <h2>Inflate Optimization Issues &amp; Fixes</h2>
+
+            <ul>
+              <li>Real issues in ASM (<a href="https://gitlab.ow2.org/asm/asm/-/issues/317955">317955</a>)
+                and Spring (<a href="https://github.com/spring-projects/spring-framework/issues/27429">27429</a>)
+                <ul class="fragment">
+                  <li>Fixed in OpenJDK 19/20 with<br/> <a href="https://bugs.openjdk.java.net/browse/JDK-8281962">
+                      8281962: Avoid unnecessary native calls in InflaterInputStream</a></li>
+                  <li>Fixed in zlib-chromium (<a href="https://bugs.chromium.org/p/chromium/issues/detail?id=1302606">1302606</a>)
+                    <em>and</em><br/> zlib-cloudflare (<a href="https://github.com/cloudflare/zlib/pull/31">PR 31</a>)
+                    which imported this issue from chromium.
+                  </li>
+                </ul>
+              </li>
+              <li class="fragment" style="margin-top: 2ex;">Changed the Specification of InflaterInputStream in JDK 20<br/>
+                to allow faster Zip implementations.
+                <ul>
+                  <li><a href="https://bugs.openjdk.org/browse/JDK-8283758">JDK-8283758: Weaken the InflaterInputStream specification...</a></li>
+                </ul>
+              </li>
+              <li class="fragment" style="margin-top: 2ex;">For more details see: <a href="https://github.com/simonis/zlib-chromium">
+                https://github.com/simonis/zlib-chromium</a></li>
+            </ul>
+
+          </section>
+
+        </section>
+
+        <section>
+
+          <section data-background="images/background_default.jpg">
+
+            <h1>The zip File Format</h1>
+
+          </section>
+
+          <section data-background="images/background_default.jpg">
+
+            <h1>Copying zip Files in Java</h1>
 
           </section>
 
