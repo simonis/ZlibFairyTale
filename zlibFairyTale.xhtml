@@ -391,6 +391,11 @@ ul.before::before {
     font-weight:bold;
     margin-left: -2ex;
 }
+pre.after.small::after {
+    content:attr(data-footer);
+    font-size: 0.5em;
+    font-family: "Roboto Condensed", "sans-serif";
+}
 </style>
 
     <!-- Printing and PDF exports -->
@@ -576,7 +581,7 @@ ul.before::before {
               <code style="background: #93a1a1; color: #000;" class="text" data-trim="true" data-noescape="true">
 Changes from <mark class="border">JDK 1.1beta3 to JDK 1.1_Final</mark>
 ...
-JAR CHANGE - Can now handle compressed JAR files in the CLASSPATH
+JAR CHANGE - <mark class="border">Can now handle compressed JAR files</mark> in the CLASSPATH
 
 java.util.zip.ZipFile was enhanced so that it can now handle
 compressed ZIP/JAR file entries. No changes to the API were made.
@@ -588,46 +593,79 @@ handle compressed ZIP/JAR files that are specified in the CLASSPATH.
               </code>
             </pre>
             </div>
+
+          </section>
+
+          <section data-background="images/background_default.jpg">
+            <h1>zlib/zip in OpenJDK</h1>
+
+            <ul>
+              <li>Implemented via JNI calls into zlib
+                <ul>
+                  <li>JNI overhead small compared to inflate/deflate</li>
+                  <li>Can be an issue for standalone CRC32 and Adler32 usage</li>
+                  <li>Fixed by intrinsification of CRC32
+                    (<a href="https://bugs.openjdk.java.net/browse/JDK-7088419">JDK-7088419</a>)
+                    and Adler32 (<a href="https://bugs.openjdk.java.net/browse/JDK-8139043">JDK-8139043</a>)
+                  </li>
+                </ul>
+              </li>
+              <li class="fragment">Zip file support was implemented in C using <code>mmap()</code>
+                <ul>
+                  <li>Could lead to crashes if .jar/.zip file was concurrently modified</li>
+                  <li>Mitigated by <a href="http://hg.openjdk.java.net/jdk7/jdk7/jdk/rev/ee385b4e2ffb"><code>-Dsun.zip.disableMemoryMapping</code></a>
+                    in JDK 5u71/6u23
+                  </li>
+                  <li>Fixed in JDK 9 by re-implementing zip file support in pure Java
+                    (<a href="https://bugs.openjdk.java.net/browse/JDK-8145260">JDK-8145260</a>)
+                  </li>
+                  <li>Resulted in nice performance boost (see <a href="https://cl4es.github.io/">C. Redestad</a>'s blog on
+                    "<a href="">Zip lookups</a>")
+                  </li>
+                </ul>
+              </li>
+            </ul>
+
           </section>
 
         </section>
 
-        <section data-background="images/background_default.jpg">
-          <h1>Deflate / LZ77</h1>
+        <section>
 
-          <ul style="list-style-type: none;">
-            <li style="margin-bottom: 1ex;">Dictionary based, sliding window (32k) compression</li>
-            <li class="fragment" data-fragment-index="1">Example 1:<br/>
-              <pre class="big noshadow" data-trim="true">
-                <code class="cpp" data-trim="true" data-noescape="true">
+          <section data-background="images/background_default.jpg">
+            <h1>Deflate / LZ77</h1>
+
+            <ul style="list-style-type: none;">
+              <li style="margin-bottom: 1ex;">Dictionary based, sliding window (32k) compression</li>
+              <li class="fragment" data-fragment-index="1">Example 1:<br/>
+                <pre class="big noshadow" data-trim="true">
+                  <code class="cpp" data-trim="true" data-noescape="true">
 <span class="fragment" data-fragment-index="1"> input: <span class="fragment highlight-current-border" data-fragment-index="5">bla</span>bla!                              
         <span class="fragment current-visible" data-fragment-index="2">^</span><span class="fragment current-visible" data-fragment-index="3">^</span><span class="fragment current-visible" data-fragment-index="4">^</span><span class="fragment current-visible" data-fragment-index="5">^</span>  <span class="fragment current-visible" data-fragment-index="6">^</span>
 <span class="fragment" data-fragment-index="1">output: </span><span class="fragment" data-fragment-index="2">b</span><span class="fragment" data-fragment-index="3">l</span><span class="fragment" data-fragment-index="4">a</span><span class="fragment" data-fragment-index="5">[3,3]</span><span class="fragment" data-fragment-index="6">!</span></span>
-                </code>
-              </pre>
-            </li>
-            <li class="fragment" data-fragment-index="7">Example 2 (only match patterns >= 3):<br/>
-              <pre class="big noshadow" data-trim="true">
-                <code class="cpp" data-trim="true" data-noescape="true">
+                  </code>
+                </pre>
+              </li>
+              <li class="fragment" data-fragment-index="7">Example 2 (only match patterns >= 3):<br/>
+                <pre class="big noshadow" data-trim="true">
+                  <code class="cpp" data-trim="true" data-noescape="true">
  input: <span class="fragment highlight-current-border" data-fragment-index="14">a<span class="fragment highlight-current-border" data-fragment-index="11">bc</span></span>bcdabcda                          
         <span class="fragment current-visible" data-fragment-index="8">^</span><span class="fragment current-visible" data-fragment-index="9">^</span><span class="fragment current-visible" data-fragment-index="10">^</span><span class="fragment current-visible" data-fragment-index="11">^</span><span class="fragment current-visible" data-fragment-index="12">^</span><span class="fragment current-visible" data-fragment-index="13">^</span><span class="fragment current-visible" data-fragment-index="14">^</span><span class="fragment current-visible" data-fragment-index="15">  ^</span><span class="fragment current-visible" data-fragment-index="16">^</span>
 output: <span class="fragment" data-fragment-index="8">a</span><span class="fragment" data-fragment-index="9">b</span><span class="fragment" data-fragment-index="10">c</span><span class="fragment" data-fragment-index="11">b</span><span class="fragment" data-fragment-index="12">c</span><span class="fragment" data-fragment-index="13">d</span><span class="fragment" data-fragment-index="14">[6,3]</span><span class="fragment" data-fragment-index="15">d</span><span class="fragment" data-fragment-index="16">a</span>
-                </code>
-              </pre>
-            </li>
-            <li class="fragment" data-fragment-index="17">Example 3 (ambiguous matches):<br/>
-              <pre class="big noshadow" data-trim="true">
-                <code class="cpp" data-trim="true" data-noescape="true">
+                  </code>
+                </pre>
+              </li>
+              <li class="fragment" data-fragment-index="17">Example 3 (ambiguous matches):<br/>
+                <pre class="big noshadow" data-trim="true">
+                  <code class="cpp" data-trim="true" data-noescape="true">
  input: <span class="fragment highlight-current-border" data-fragment-index="24">a<span class="fragment highlight-current-border" data-fragment-index="21">bc</span></span>bcda<span class="fragment highlight-current-border red" data-fragment-index="24"><span class="fragment highlight-current-border" data-fragment-index="25">bcda</span></span>                          
         <span class="fragment current-visible" data-fragment-index="18">^</span><span class="fragment current-visible" data-fragment-index="19">^</span><span class="fragment current-visible" data-fragment-index="20">^</span><span class="fragment current-visible" data-fragment-index="21">^</span><span class="fragment current-visible" data-fragment-index="22">^</span><span class="fragment current-visible" data-fragment-index="23">^</span><span class="fragment current-visible" data-fragment-index="24">^</span><span class="fragment current-visible" data-fragment-index="25">^</span>
 output: <span class="fragment" data-fragment-index="18">a</span><span class="fragment" data-fragment-index="19">b</span><span class="fragment" data-fragment-index="20">c</span><span class="fragment" data-fragment-index="21">b</span><span class="fragment" data-fragment-index="22">c</span><span class="fragment" data-fragment-index="23">d</span><span class="fragment" data-fragment-index="24">a</span><span class="fragment" data-fragment-index="25">[4,4]</span>
-                </code>
-              </pre>
-            </li>
-          </ul>
+                  </code>
+                </pre>
+              </li>
+            </ul>
 <!--
-<![CDATA[
-
  input: blabla!
         ^^^^  ^
 output: bla[3,3]!
@@ -639,13 +677,86 @@ output: abcbcd[6,3]da
  input: abcbcdabcda
         ^^^^^^^^
 output: abcbcda[4,4]
-
-]]>
 -->
-        </section>
+          </section>
 
-        <section data-background="images/background_default.jpg">
-          <h1>Deflate / Huffmann Coding</h1>
+          <section data-background="images/background_default.jpg">
+            <h2>Deflate / Huffman Coding</h2>
+
+            <pre class="big noshadow after small" data-trim="true" data-footer="Adapted from: https://en.wikipedia.org/wiki/Huffman_coding">
+              <code class="cpp" data-trim="true" data-noescape="true">
+input: a_dead_dad_ceded_a_bad_babe_a_beaded_abaca_bed
+
+      0                                                      c: 0000
+c:02 ---+     0                                              b: 0001
+      1 |-- cb:08 --+                                        e: 001
+b:06 ---+           |     0                                  a: 01
+              1     |-- ecb:15 --+                           _: 10
+e:07 ---------------+            |      0                    d: 11
+                          1      |-- aecb:26 --+
+a:11-----------------------------+             |
+      0                                        |-- _daecb:46
+_:10 ---+                               1      |
+      1 |-- _d:20 -----------------------------+
+d:10 ---+
+
+01 10 11 001 01 11 10 11 01 11 10 0000 001 11 001 11 10 01 10 0001 01 11 10 0001
+01 0001 001 10 01 10 0001 0001 01 11 001 11 10 01 0001 01 0000 01 10 0001 001 11
+              </code>
+            </pre>
+<div style="display: none;">
+input: a_dead_dad_ceded_a_bad_babe_a_beaded_abaca_bed
+
+      0                                             c: 0000
+c:02 ---+     0                                     b: 0001
+      1 |-- cb:08 --+                               e: 001
+b:06 ---+           |     0                         a: 01
+              1     |-- ecb:15 --+                  _: 10
+e:07 ---------------+            |      0           d: 11
+                          1      |-- aecb:26 --+
+a:11-----------------------------+             |
+      0                                        |-- _daecb:46
+_:10 ---+                               1      |
+      1 |-- _d:20 -----------------------------+
+d:10 ---+
+
+01 10 11 001 01 11 10 11 01 11 10 0000 001 11 001 11 10 01 10 0001 01 11 10 0001
+01 0001 001 10 01 10 0001 0001 01 11 001 11 10 01 0001 01 0000 01 10 0001 001 11
+</div>
+          </section>
+
+          <section data-background="images/background_default.jpg">
+            <h2>Deflate - Combining LZ77 &amp; Huffman </h2>
+
+            <ul>
+              <li>LZZ requires a tag (bit) to distinguish literals from distance/length</li>
+              <li>Deflate conceptuall requiers three alphabets:
+                <ul>
+                  <li>Byte values &isin; 0..255</li>
+                  <li>[length, distance] pairs (with length &isin; 3..258 and distance &isin; 1..32768)</li>
+                </ul>
+              </li>
+              <li class="fragment" data-fragment-index="1">Deflate combines literals &amp; length into one 287-character alphabet..</li>
+              <li class="fragment" data-fragment-index="1" style="list-style-type: none;">
+                <pre class="big noshadow" data-trim="true" style="padding-left: 0;">
+                  <code class="cpp" data-trim="true" data-noescape="true">
+   Code   Extra                   Code    Extra
+  0..255:   0    literal byte    269..272:   2    length 19..34
+     256:   0    end of block      ....
+257..264:   0    length  3..10   281..284:   5    length 131..257
+265..268:   1    length 11..18        285:   0    length 258
+                  </code>
+                </pre>
+              </li>
+              <li class="fragment" data-fragment-index="2">..and uses another 32 charcter alphabet for distances:
+                <ul>
+                  <li>5 bits (0..32) plus 0..13 extra bits for distances &isin; 1..32768</li>
+                </ul>
+              </li>
+              <li class="fragment" data-fragment-index="3">Huffman code for 287-char alphabet is static (predefined) or dynamic</li>
+            </ul>
+          </section>
+
         </section>
 
         <section>
@@ -676,14 +787,101 @@ output: abcbcda[4,4]
 
         </section>
 
+        <section>
+
+          <section data-background="images/background_default.jpg">
+            <h2>Inflate Performance - 2020 vs. 2022</h2>
+
+            <object data="images/i7-8650U-1900MHz-inflate-silesia-2020-09-16-file-inflate-silesia-horizontal-part2.svg"
+                    type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+
+            <object data="images/i7-8650U-1900MHz-inflate-silesia-2022-10-21-file-inflate-silesia-horizontal-part2.svg"
+                    type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+          </section>
+
+          <section data-background="images/background_default.jpg">
+            <h2>Additional Benchmarks (x86_64 &amp; aarch64)</h2>
+
+            <h2>
+              <a href="https://github.com/simonis/zlib-bench">https://github.com/simonis/zlib-bench</a>
+            </h2>
+
+          </section>
+
+        </section>
+
         <section data-background="images/background_default.jpg">
-          <h2>Inflate Performance - 2020 vs. 2022</h2>
+          <h2>Dynamic vs. Static Linking</h2>
 
-          <object data="images/i7-8650U-1900MHz-inflate-silesia-2020-09-16-file-inflate-silesia-horizontal-part2.svg"
-                  type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+          <ul>
+            <li>Eternal question: <code style="color: #78b9e6;">-with-zlib=bundled</code> or
+              <code style="color: #78b9e6;">-with-zlib=system</code>?
+            </li>
+            <li>Best answer: <span class="fragment" data-fragment-index="1">it depends &#x1F600;</span>
+              <ul>
+                <li class="fragment" data-fragment-index="2">JDK 8 and previous defaults to static, JDK 9+
+                  <a href="https://bugs.openjdk.java.net/browse/JDK-8031767">changed to dynamic</a>
+                </li>
+                <li class="fragment" data-fragment-index="2" style="list-style-type: none;">
+                  <pre class="big noshadow" data-trim="true" style="padding-left: 0;">
+                    <code class="terminal" data-trim="true" data-noescape="true">
+$ ldd jdk-8/jre/lib/amd64/libzip.so | grep libz
+$ ldd jdk-11/lib/libzip.so | grep libz
+libz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007ffff7785000)
+                    </code>
+                  </pre>
+                </li>
+                <li class="fragment">On Windows <em>always</em> static because there's no default system zlib</li>
+                <li class="fragment">Recent system zlib on MacOSX/M1 is buggy ->
+                  back to static (<a href="https://bugs.openjdk.org/browse/JDK-8286623">JDK-8286623</a>)
+                </li>
+                <li class="fragment">Security considerations (e.g. <a href="https://nvd.nist.gov/vuln/detail/CVE-2018-25032">CVE-2018-25032</a>)</li>
+                <li class="fragment">In the end every OpenJDK vender can decide independently</li>
+              </ul>
+            </li>
+          </ul>
 
-          <object data="images/i7-8650U-1900MHz-inflate-silesia-2022-10-21-file-inflate-silesia-horizontal-part2.svg"
-                  type="image/svg+xml" style="width: 90%;">&nbsp;</object>
+        </section>
+
+        <section>
+
+          <section data-background="images/background_default.jpg">
+
+            <h2>Using alternative zlib implementions with OpenJDK</h2>
+
+            <ul>
+              <li>Check if your OpenJDK version dynamically links zlib?</li>
+              <li>If yes, use <code style="color: #78b9e6;">LD_LIBRARY_PATH</code>/<code style="color: #78b9e6;">LD_PRELOAD</code>
+                (on MacOS <code style="color: #78b9e6;">DYLD_LIBRARY_PATH</code>)
+              </li>
+              <li style="list-style-type: none;">
+                <pre class="big noshadow" data-trim="true" style="padding-left: 0;">
+                  <code class="terminal" data-trim="true" data-noescape="true">
+$ LD_LIBRARY_PATH=&lt;path-to-alternative-zlib&gt;/ java ...
+$ LD_PRELOAD=&lt;path-to-alternative-zlib&gt;/libz.so java ...
+                  </code>
+                </pre>
+              </li>
+              <li class="fragment" data-fragment-index="1">Checking which library a running process is using:</li>
+              <li class="fragment"  data-fragment-index="1" style="list-style-type: none;">
+                <pre class="big noshadow" data-trim="true" style="padding-left: 0;">
+                  <code class="terminal" data-trim="true" data-noescape="true">
+$ java ... &amp;
+$ cat /proc/`pidof java`/maps | grep "libz.so" | awk '{print $6;}' | uniq
+<span class="fragment" data-fragment-index="2">/lib/x86_64-linux-gnu/libz.so.1.2.11</span>
+<span class="fragment" data-fragment-index="3">$ <mark class="border">LD_LIBRARY_PATH=/tmp/zlib-cloudflare</mark> java ... &amp;
+$ cat /proc/`pidof java`/maps | grep "libz.so" | awk '{print $6;}' | uniq</span>
+<span class="fragment" data-fragment-index="4">/tmp/zlib-cloudflare/libz.so.1.2.8</span>
+<span class="fragment" data-fragment-index="5">$ <mark class="border">LD_PRELOAD=/tmp/zlib-cloudflare/libz.so java</mark> ... &amp;
+$ cat /proc/`pidof java`/maps | grep "libz.so" | awk '{print $6;}' | uniq</span>
+<span class="fragment" data-fragment-index="6">/tmp/zlib-cloudflare/libz.so.1.2.8</span>
+                  </code>
+                </pre>
+              </li>
+            </ul>
+
+          </section>
+
         </section>
 
         <section data-background="images/background_default.jpg">
@@ -702,6 +900,8 @@ output: abcbcda[4,4]
                 High Performance ZLIB compression on Intel Architecture Processors</a></li>
             <li><a href="https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT">
                 ZIP File Format Specification</a></li>
+            <li><a href="https://github.com/madler/infgen">infgen: a deflate stream disassembler</a> (by M. Adler)
+            </li>
           </ul>
         </section>
 
