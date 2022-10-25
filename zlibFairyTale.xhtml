@@ -107,7 +107,7 @@ code.java .hljs-title-terminal {
 
 mark {
     color: black;
-    background-color: yellow;
+    background-color: lightyellow;
     border-radius: 10px;
 }
 mark.orange {
@@ -841,9 +841,11 @@ libz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007ffff7785000)
                 <li class="fragment">Recent system zlib on MacOSX/M1 is buggy ->
                   back to static (<a href="https://bugs.openjdk.org/browse/JDK-8286623">JDK-8286623</a>)
                 </li>
-                <li class="fragment">Security considerations (e.g. <a href="https://nvd.nist.gov/vuln/detail/CVE-2018-25032">CVE-2018-25032</a>)</li>
-                <li class="fragment">In the end every OpenJDK vendor can decide independently</li>
+                <li class="fragment">Security considerations (e.g. <a href="https://nvd.nist.gov/vuln/detail/CVE-2018-25032">CVE-2018-25032</a>)<br/>
+                  zlib release 1.2.12 broke OpenJDK compatibility (see <a href="https://github.com/madler/zlib/issues/634">zlib issue 634</a>).
+                </li>
               </ul>
+            <li class="fragment">In the end every OpenJDK vendor can decide independently</li>
             </li>
           </ul>
 
@@ -1164,10 +1166,10 @@ return outputStream.toByteArray();
             <div style="display: inline-block;">
               <pre class="big noshadow" data-trim="true">
                 <code style="background: #93a1a1; color: #000;" class="text" data-trim="true" data-noescape="true">
-                                            Central
- FileEntry1  FileEntry2       FileEntryN   Directory
+                                           <span class="fragment highlight-current-border border-no-bottom" data-fragment-index="0"> Central </span>
+ <span class="fragment highlight-current-border" data-fragment-index="0">FileEntry1</span>  <span class="fragment highlight-current-border" data-fragment-index="0">FileEntry2</span>       <span class="fragment highlight-current-border" data-fragment-index="0">FileEntryN</span>   <span class="fragment highlight-current-border border-no-top" data-fragment-index="0">Directory</span>
 /          \/          \     /          \/           \
-|<span class="fragment highlight-current-border" data-fragment-index="1">LH</span>|<span class="fragment highlight-current-border" data-fragment-index="4">data</span>|<span class="fragment highlight-current-border" data-fragment-index="3">DD</span>||<span class="fragment highlight-current-border" data-fragment-index="1">LH</span>|<span class="fragment highlight-current-border" data-fragment-index="4">data</span>|<span class="fragment highlight-current-border" data-fragment-index="3">DD</span>|.....|<span class="fragment highlight-current-border" data-fragment-index="1">LH</span>|<span class="fragment highlight-current-border" data-fragment-index="4">data</span>|<span class="fragment highlight-current-border" data-fragment-index="3">DD</span>||<span class="fragment highlight-current-border" data-fragment-index="2">CH</span>|<span class="fragment highlight-current-border" data-fragment-index="2">CH</span>|..|<span class="fragment highlight-current-border" data-fragment-index="2">CH</span>|<span class="fragment highlight-current-border" data-fragment-index="5">EOCD</span>|
+<mark>|<span class="fragment highlight-current-border" data-fragment-index="1">LH</span>|<span class="fragment highlight-current-border" data-fragment-index="4">data</span>|<span class="fragment highlight-current-border" data-fragment-index="3">DD</span>||<span class="fragment highlight-current-border" data-fragment-index="1">LH</span>|<span class="fragment highlight-current-border" data-fragment-index="4">data</span>|<span class="fragment highlight-current-border" data-fragment-index="3">DD</span>|.....|<span class="fragment highlight-current-border" data-fragment-index="1">LH</span>|<span class="fragment highlight-current-border" data-fragment-index="4">data</span>|<span class="fragment highlight-current-border" data-fragment-index="3">DD</span>||<span class="fragment highlight-current-border" data-fragment-index="2">CH</span>|<span class="fragment highlight-current-border" data-fragment-index="2">CH</span>|..|<span class="fragment highlight-current-border" data-fragment-index="2">CH</span>|<span class="fragment highlight-current-border" data-fragment-index="5">EOCD</span>|</mark>
 ^           ^                ^            |  |        |
 |           |                |            |  |        |
 |           |                +------------|--|--------+
